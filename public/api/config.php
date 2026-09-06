@@ -40,8 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Cargar variables de entorno desde el archivo .env en la raíz del proyecto
-$env_path = __DIR__ . '/../../.env';
+// Cargar variables de entorno desde el archivo .env en la raíz del sitio
+$env_path = __DIR__ . '/../.env';
 if (file_exists($env_path)) {
     $env_vars = parse_ini_file($env_path);
 } else {
