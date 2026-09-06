@@ -1,0 +1,370 @@
+@import "tailwindcss";
+
+/* ============================================================
+   BOXWILL INVERSIONES — Design System
+   Tailwind CSS 4.3 (CSS-first configuration)
+   
+   ÍNDICE
+   1. @theme — Tokens de diseño
+      1.1 Colores
+      1.2 Tipografía
+      1.3 Espaciado custom
+      1.4 Border radius
+      1.5 Sombras
+      1.6 Transiciones
+   2. Base styles
+   3. Utilidades custom
+   4. Animaciones
+   5. Scrollbar
+   ============================================================ */
+
+
+/* ============================================================
+   1. @THEME — Design tokens
+   
+   Uso: referencia estos tokens en tus clases de Tailwind con
+   el prefijo estándar. Ej:
+     bg-(--color-bw-surface)
+     text-(--color-bw-primary)
+     border-(--color-bw-border)
+     -(--radius-bw-md)
+   
+   En Tailwind 4 los tokens de @theme son CSS variables nativas,
+   así que también los puedes usar en CSS arbitrario:
+     background: var(--color-bw-surface);
+   ============================================================ */
+@theme {
+
+  /* ----------------------------------------------------------
+     1.1 COLORES
+     Paleta monocromática. Negro real como base, sin azules
+     ni grises con tint. Capital serio, no fintech.
+     ---------------------------------------------------------- */
+
+  /* Fondos */
+  --color-bw-black: #000000;
+  /* Fondo base de la página */
+  --color-bw-surface: #0a0a0a;
+  /* Cards, secciones elevadas */
+  --color-bw-raised: #111111;
+  /* Superficies sobre surface (hover states, inputs) */
+
+  /* Bordes */
+  --color-bw-border: #1c1c1c;
+  /* Bordes sutiles (dividers, cards) */
+  --color-bw-border-strong: #2a2a2a;
+  /* Bordes con más presencia */
+
+  /* Texto — escala de 4 niveles */
+  --color-bw-white: #ffffff;
+  /* Énfasis máximo: headings principales */
+  --color-bw-primary: #e8e8e8;
+  /* Texto de cuerpo principal */
+  --color-bw-secondary: #a0a0a0;
+  /* Texto secundario, descripciones */
+  --color-bw-muted: #555555;
+  /* Texto desactivado, placeholders */
+
+  /* Acento — usado con extrema moderación */
+  --color-bw-accent: #c8c8c8;
+  /* Líneas decorativas, underlines activos */
+
+  /* ----------------------------------------------------------
+     1.2 TIPOGRAFÍA
+     
+     Estética técnica: una sola familia sans-serif, diferenciada
+     solo por peso y tracking. Sin serif. Sin mezcla de familias.
+     
+     Geist — fuente open source de Vercel, diseñada para
+     interfaces técnicas. Fallback a Inter si no está disponible.
+     
+     Agrégala en index.astro (reemplaza el link anterior):
+     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+     
+     Alternativa sin Google Fonts:
+     npm install geist  → importar en global.css con @import
+     ---------------------------------------------------------- */
+
+  --font-bw-display: 'Geist', 'Inter', system-ui, sans-serif;
+  /* Headings — mismo stack, más peso */
+  --font-bw-body: 'Geist', 'Inter', system-ui, sans-serif;
+  /* Body — consistencia total */
+
+  /* Escala tipográfica */
+  --text-bw-xs: 0.75rem;
+  /* 12px — labels, captions */
+  --text-bw-sm: 0.875rem;
+  /* 14px — footnotes, footer */
+  --text-bw-base: 1rem;
+  /* 16px — body base */
+  --text-bw-lg: 1.125rem;
+  /* 18px — body grande */
+  --text-bw-xl: 1.25rem;
+  /* 20px — subtítulos */
+  --text-bw-2xl: 1.5rem;
+  /* 24px — headings sección */
+  --text-bw-3xl: 1.875rem;
+  /* 30px — headings medianos */
+  --text-bw-4xl: 2.25rem;
+  /* 36px — headings grandes */
+  --text-bw-5xl: 3rem;
+  /* 48px — display */
+  --text-bw-6xl: 3.75rem;
+  /* 60px — hero display */
+
+  /* Line heights */
+  --leading-bw-tight: 1.15;
+  /* Display, headings */
+  --leading-bw-snug: 1.4;
+  /* Subtítulos */
+  --leading-bw-normal: 1.6;
+  /* Body */
+  --leading-bw-relaxed: 1.75;
+  /* Body largo, artículos */
+
+  /* Letter spacing */
+  --tracking-bw-tight: -0.03em;
+  /* Display, fuentes display serif */
+  --tracking-bw-normal: -0.01em;
+  /* Body, ligeramente apretado */
+  --tracking-bw-wide: 0.08em;
+  /* Eyebrows, labels en mayúsculas */
+  --tracking-bw-wider: 0.12em;
+  /* Labels de acento */
+
+  /* ----------------------------------------------------------
+     1.3 ESPACIADO CUSTOM
+     Complementa la escala de Tailwind para necesidades
+     específicas del layout de Boxwill.
+     Uso: gap-(--spacing-bw-section), py-(--spacing-bw-section)
+     ---------------------------------------------------------- */
+
+  --spacing-bw-section: 7rem;
+  /* Separación entre secciones grandes */
+  --spacing-bw-block: 3.5rem;
+  /* Separación entre bloques dentro de sección */
+  --spacing-bw-content: 1.5rem;
+  /* Separación entre elementos de contenido */
+
+  /* ----------------------------------------------------------
+     1.4 BORDER RADIUS
+     Cero. Sin excepciones. Estética técnica sharp.
+     Los tokens existen para que si algún día cambias de opinión,
+     lo cambias en un solo lugar.
+     ---------------------------------------------------------- */
+
+  --radius-bw-none: 0px;
+  --radius-bw-sm: 0px;
+  --radius-bw-md: 0px;
+  --radius-bw-lg: 0px;
+  --radius-bw-xl: 0px;
+
+  /* ----------------------------------------------------------
+     1.5 SOMBRAS
+     En paleta oscura, las sombras son casi invisibles.
+     Preferimos bordes sobre sombras.
+     ---------------------------------------------------------- */
+
+  --shadow-bw-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-bw-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-bw-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+
+  /* ----------------------------------------------------------
+     1.6 TRANSICIONES
+     Una sola duración estándar. Consistencia > creatividad
+     en timing de UI.
+     ---------------------------------------------------------- */
+
+  --duration-bw-fast: 150ms;
+  --duration-bw-normal: 300ms;
+  --duration-bw-slow: 600ms;
+  --ease-bw: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ============================================================
+   2. BASE STYLES
+   Reset mínimo y estilos base que aplican globalmente.
+   ============================================================ */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-bw-body);
+  background-color: var(--color-bw-black);
+  color: var(--color-bw-primary);
+}
+
+
+/* ============================================================
+   3. UTILIDADES CUSTOM
+   Clases que Tailwind no genera pero necesitamos repetidamente.
+   Prefijo .bw- para no colisionar con Tailwind.
+   ============================================================ */
+
+/* Contenedor estándar de la página */
+.bw-container {
+  width: 100%;
+  max-width: 72rem;
+  /* 1152px — más contenido respira en pantallas grandes */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* Eyebrow — label pequeño sobre un heading */
+.bw-eyebrow {
+  font-family: var(--font-bw-body);
+  font-size: var(--text-bw-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-bw-wider);
+  text-transform: uppercase;
+  color: var(--color-bw-muted);
+}
+
+/* Línea decorativa lateral izquierda (usada en Vision) */
+.bw-side-rule {
+  border-left: 1px solid var(--color-bw-border-strong);
+  padding-left: 1.5rem;
+}
+
+/* Heading display — sans-serif pesado, estética técnica */
+.bw-heading-display {
+  font-family: var(--font-bw-display);
+  font-size: var(--text-bw-5xl);
+  font-weight: 700;
+  line-height: var(--leading-bw-tight);
+  letter-spacing: var(--tracking-bw-tight);
+  color: var(--color-bw-white);
+}
+
+/* Botón primario — blanco sólido, esquinas rectas */
+.bw-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background-color: var(--color-bw-white);
+  color: var(--color-bw-black);
+  font-family: var(--font-bw-body);
+  font-size: var(--text-bw-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-bw-normal);
+  border-radius: 0;
+  transition: background-color var(--duration-bw-fast) var(--ease-bw);
+  text-decoration: none;
+}
+
+.bw-btn-primary:hover {
+  background-color: var(--color-bw-primary);
+}
+
+/* Botón fantasma (outline) — esquinas rectas */
+.bw-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background-color: transparent;
+  color: var(--color-bw-secondary);
+  font-family: var(--font-bw-body);
+  font-size: var(--text-bw-sm);
+  font-weight: 500;
+  letter-spacing: var(--tracking-bw-normal);
+  border: 1px solid var(--color-bw-border-strong);
+  border-radius: 0;
+  transition: color var(--duration-bw-fast) var(--ease-bw),
+    border-color var(--duration-bw-fast) var(--ease-bw);
+  text-decoration: none;
+}
+
+.bw-btn-ghost:hover {
+  color: var(--color-bw-white);
+  border-color: var(--color-bw-white);
+}
+
+/* Divider horizontal estándar */
+.bw-divider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-bw-border);
+}
+
+
+/* ============================================================
+   4. ANIMACIONES
+   ============================================================ */
+
+@keyframes bw-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bw-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-bw-fade-up {
+  animation: bw-fade-up var(--duration-bw-slow) var(--ease-bw) forwards;
+}
+
+.animate-bw-fade-in {
+  animation: bw-fade-in var(--duration-bw-normal) var(--ease-bw) forwards;
+}
+
+/* Alias para compatibilidad con el Tabs.jsx existente */
+.animate-fadeIn {
+  animation: bw-fade-up var(--duration-bw-slow) var(--ease-bw) forwards;
+}
+
+/* Respeta preferencias de accesibilidad del sistema */
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-bw-fade-up,
+  .animate-bw-fade-in,
+  .animate-fadeIn {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+
+/* ============================================================
+   5. SCROLLBAR
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bw-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-bw-border-strong);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-bw-muted);
+}

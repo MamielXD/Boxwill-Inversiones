@@ -1,0 +1,133 @@
+---
+import Tabs from "../components/Tabs.jsx";
+import PortfolioCarousel from "../components/PortfolioCarousel.jsx";
+import Vision from "../components/Vision.jsx";
+import "../styles/global.css";
+const logo = "/logo.png";
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Boxwill Inversiones — Educación como motor de transformación</title>
+    <meta
+      name="description"
+      content="Creemos en educación como motor de transformación de sociedades. Generamos valor para financiar educación y hacer del mundo un lugar de aprendizaje e investigación."
+    />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- Geist — tipografía técnica, open source de Vercel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) => console.log("Service Worker registrado:", reg))
+          .catch((err) => console.error("Error al registrar SW:", err));
+      }
+    </script>
+  </head>
+
+  <body class="min-h-screen bg-black text-gray-100 antialiased">
+    <main class="flex flex-col items-center">
+
+      <!-- Header: logo + tagline -->
+      <header
+        class="w-full flex flex-col items-center gap-6 px-6 pt-20 pb-20"
+        style="border-bottom: 1px solid var(--color-bw-border);"
+      >
+        <img
+          src={logo}
+          alt="Boxwill Inversiones"
+          class="w-28 md:w-36 object-contain"
+          style="opacity: 0.95;"
+        />
+        <p
+          class="text-sm uppercase text-center"
+          style="color: var(--color-bw-muted); letter-spacing: var(--tracking-bw-wider);"
+        >
+          Inversiones · Educación · Transformación
+        </p>
+      </header>
+
+      <!-- Tabs como protagonista -->
+      <section
+        class="w-full flex justify-center px-6 py-24"
+        style="border-bottom: 1px solid var(--color-bw-border);"
+      >
+        <Tabs client:load />
+      </section>
+
+      <!-- Portafolio — carrusel dentro del mismo bw-container que el heading -->
+      <section
+        class="w-full py-20"
+        style="border-bottom: 1px solid var(--color-bw-border);"
+      >
+        <div class="bw-container">
+          <p class="bw-eyebrow mb-3">Portafolio</p>
+          <h2
+            class="text-3xl md:text-4xl font-bold mb-10"
+            style="color: var(--color-bw-white); letter-spacing: var(--tracking-bw-tight); line-height: var(--leading-bw-tight);"
+          >
+            Nuestro Portafolio
+          </h2>
+          <PortfolioCarousel client:load />
+        </div>
+      </section>
+
+      <!-- Visión + CTA -->
+      <section
+        class="w-full flex justify-center py-24 px-6"
+        style="border-bottom: 1px solid var(--color-bw-border);"
+      >
+        <Vision />
+      </section>
+
+      <!-- Footer — mismo token de color que el resto, borde superior -->
+      <footer
+        class="w-full py-8 px-6"
+        style="border-top: 1px solid var(--color-bw-border);"
+      >
+        <div
+          class="bw-container flex flex-col sm:flex-row items-center justify-between gap-4"
+        >
+          <p class="text-sm" style="color: var(--color-bw-muted);">
+            © {new Date().getFullYear()} Boxwill Inversiones
+          </p>
+          <nav class="flex gap-8 text-sm" aria-label="Links del footer">
+            <a
+              href="https://boxwill.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bw-footer-link"
+              style="color: var(--color-bw-muted); text-decoration: none; transition: color var(--duration-bw-fast) var(--ease-bw);"
+              onmouseover="this.style.color='var(--color-bw-white)'"
+              onmouseout="this.style.color='var(--color-bw-muted)'"
+            >
+              Boxwill
+            </a>
+            <a
+              href="/admin"
+              class="bw-footer-link"
+              style="color: var(--color-bw-muted); text-decoration: none; transition: color var(--duration-bw-fast) var(--ease-bw);"
+              onmouseover="this.style.color='var(--color-bw-white)'"
+              onmouseout="this.style.color='var(--color-bw-muted)'"
+            >
+              Administración
+            </a>
+          </nav>
+        </div>
+      </footer>
+
+    </main>
+  </body>
+</html>

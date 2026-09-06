@@ -1,0 +1,27 @@
+{
+  "name": "bwinversiones",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev --host",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/react": "^6.0.0",
+    "@lucide/astro": "^0.553.0",
+    "@tailwindcss/vite": "^4.3.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "astro": "^7.0.3",
+    "lucide-react": "^0.553.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-is": "^19.2.5",
+    "recharts": "^3.3.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.3.1"
+  }
+}

@@ -1,0 +1,1 @@
+Hablame siempre en español pero se consiso. Recuerda que debes editar los archivos php de inversiones en la carpeta public/api no en la carpeta dist/api.

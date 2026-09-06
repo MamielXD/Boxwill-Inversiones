@@ -1,0 +1,16 @@
+# Block access to .env and other sensitive files
+<FilesMatch "^\.env|^\.git">
+    Require all denied
+</FilesMatch>
+
+# Allow CORS for API if needed, or other security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-XSS-Protection "1; mode=block"
+
+# Ensure Authorization header reaches PHP (some hosts/Proxies strip it)
+# This rule passes the Authorization header into the PHP env so getallheaders()/$_SERVER can see it.
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Alternative (uncomment if needed):
+# SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
