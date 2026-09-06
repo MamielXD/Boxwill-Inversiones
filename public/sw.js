@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boxwill-cache-v3';
+const CACHE_NAME = 'boxwill-cache-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -47,10 +47,17 @@ self.addEventListener('fetch', event => {
       return (
         response ||
         fetch(request).then(networkResponse => {
-          return caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, networkResponse.clone());
-            return networkResponse;
-          });
+          // Solo cachear si la respuesta es exitosa (evita guardar errores 502 de Cloudflare)
+          if (networkResponse && networkResponse.ok) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        }).catch(err => {
+          // Si falla la red por completo
+          console.error('Error fetching:', err);
         })
       );
     })
