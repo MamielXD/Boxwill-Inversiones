@@ -6,6 +6,7 @@ export default function AdminAuth() {
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [preferencias, setPreferencias] = useState(null);
 
   useEffect(() => {
     checkAuth();
@@ -21,13 +22,16 @@ export default function AdminAuth() {
         const data = await res.json();
         setIsAuthenticated(data.authenticated);
         setUserId(data.user_id);
+        setPreferencias(data.preferencias);
       } else {
         setIsAuthenticated(false);
         setUserId(null);
+        setPreferencias(null);
       }
     } catch (err) {
       setIsAuthenticated(false);
       setUserId(null);
+      setPreferencias(null);
     } finally {
       setLoading(false);
     }
@@ -41,14 +45,16 @@ export default function AdminAuth() {
       });
       setIsAuthenticated(false);
       setUserId(null);
+      setPreferencias(null);
     } catch (err) {
       console.error('Error al cerrar sesión:', err);
     }
   }
 
-  function handleLoginSuccess(id) {
+  function handleLoginSuccess(id, prefs) {
     setIsAuthenticated(true);
     setUserId(id);
+    setPreferencias(prefs);
   }
 
   if (loading) {
@@ -60,7 +66,7 @@ export default function AdminAuth() {
   }
 
   return isAuthenticated ? (
-    <AdminPanel onLogout={handleLogout} userId={userId} />
+    <AdminPanel onLogout={handleLogout} userId={userId} initPrefs={preferencias} />
   ) : (
     <Login onLoginSuccess={handleLoginSuccess} />
   );

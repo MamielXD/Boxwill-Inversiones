@@ -157,7 +157,7 @@ function usePatrimonioData() {
   return { data, fetchPatrimonio };
 }
 
-export default function AdminPanel({ onLogout, userId }) {
+export default function AdminPanel({ onLogout, userId, initPrefs }) {
   const { rows, metrics, loading, error, addInversion, updateInversion, deleteInversion, fetchInversiones, fetchMetrics } = useInversiones();
   const { items: inventarioItems, fetchItems: fetchInventarioItems } = useInventarioItems();
   const { data: patrimonioData } = usePatrimonioData();
@@ -197,13 +197,12 @@ export default function AdminPanel({ onLogout, userId }) {
 
   useEffect(() => { if (addingGastoId) fetchGastos(addingGastoId); }, [addingGastoId]);
 
-  // load user preferences for which sections open by default
+  // Load user preferences from backend (passed via initPrefs)
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(`bw.admin.openSections.${userId || 'guest'}`);
-      if (raw) setOpenSections(JSON.parse(raw));
-    } catch (e) { /* ignore */ }
-  }, [userId]);
+    if (initPrefs) {
+      setOpenSections(initPrefs);
+    }
+  }, [initPrefs]);
 
   // Helper para renderizar secciones según preferencias
   function renderSection(key, title, content, opts = {}) {
@@ -365,7 +364,7 @@ export default function AdminPanel({ onLogout, userId }) {
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6" style={S.sectionDivider}>
           <div>
             <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--color-bw-white)', letterSpacing: 'var(--tracking-bw-tight)', fontFamily: 'var(--font-bw-display)' }}>
-              Panel de Inversiones
+              Panel de Administración
             </h1>
             <p className="text-sm" style={{ color: 'var(--color-bw-muted)' }}>Gestiona flujo de caja y rentabilidad real</p>
           </div>
@@ -375,7 +374,7 @@ export default function AdminPanel({ onLogout, userId }) {
           </div>
         </header>
 
-        <PanelSettings userId={userId} open={showSettings} onClose={() => setShowSettings(false)} onSave={(prefs) => setOpenSections(prefs)} />
+        <PanelSettings initPrefs={initPrefs} open={showSettings} onClose={() => setShowSettings(false)} onSave={(prefs) => setOpenSections(prefs)} />
 
         {/* Secciones ordenadas según preferencias */}
         {(() => {

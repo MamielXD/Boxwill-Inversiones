@@ -59,28 +59,22 @@ const SquareCheck = ({ checked, onChange, label }) => (
   </label>
 );
 
-export default function PanelSettings({ userId, open, onClose, onSave }) {
-  const key = KEY_PREFIX + (userId || 'guest');
+export default function PanelSettings({ initPrefs, open, onClose, onSave }) {
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const merged = {};
-        SECTION_DEFS.forEach(({ key: k }) => {
-          merged[k] = { ...DEFAULT_PREFS[k], ...(parsed[k] || {}) };
-        });
-        setPrefs(merged);
-      } else {
-        setPrefs(DEFAULT_PREFS);
-      }
-    } catch (e) { 
-      setPrefs(DEFAULT_PREFS); 
+    if (initPrefs) {
+      const merged = {};
+      SECTION_DEFS.forEach(({ key: k }) => {
+        merged[k] = { ...DEFAULT_PREFS[k], ...(initPrefs[k] || {}) };
+      });
+      setPrefs(merged);
+    } else {
+      setPrefs(DEFAULT_PREFS);
     }
-  }, [open, key]);
+  }, [open, initPrefs]);
 
   function update(key, field, value) {
     setPrefs(p => ({ ...p, [key]: { ...p[key], [field]: value } }));
@@ -99,13 +93,23 @@ export default function PanelSettings({ userId, open, onClose, onSave }) {
     }));
   }
 
-  function save() {
-    localStorage.setItem(key, JSON.stringify(prefs));
-    if (onSave) onSave(prefs);
-    onClose();
-    // Nota: window.location.reload() es agresivo en React. 
-    // Si tu app depende del estado global, considera actualizarlo vía props/context en lugar de recargar.
-    window.location.reload();
+  async function save() {
+    setSaving(true);
+    try {
+      await fetch(import.meta.env.PUBLIC_API_URL + '/auth.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'save_prefs', preferencias: prefs })
+      });
+      if (onSave) onSave(prefs);
+      onClose();
+    } catch (err) {
+      console.error('Error al guardar preferencias:', err);
+      alert('Error al guardar preferencias en la nube.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   const ordered = [...SECTION_DEFS].sort((a, b) => prefs[a.key].order - prefs[b.key].order);
@@ -202,8 +206,8 @@ export default function PanelSettings({ userId, open, onClose, onSave }) {
           <button onClick={onClose} className="bw-btn-ghost">
             Descartar
           </button>
-          <button onClick={save} className="bw-btn-primary">
-            Guardar cambios
+          <button onClick={save} disabled={saving} className="bw-btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
+            {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </div>
       </div>

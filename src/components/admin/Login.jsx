@@ -7,23 +7,26 @@ export default function Login({ onLoginSuccess }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(e, forceUser = null, forcePass = null) {
+    if (e) e.preventDefault();
     setError('');
     setLoading(true);
+
+    const u = forceUser || username;
+    const p = forcePass || password;
 
     try {
       const res = await fetch(import.meta.env.PUBLIC_API_URL + '/auth.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username: u, password: p })
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        onLoginSuccess(data.user_id);
+        onLoginSuccess(data.user_id, data.preferencias);
       } else {
         setError(data.error || 'Error al iniciar sesión');
       }
@@ -125,9 +128,9 @@ export default function Login({ onLoginSuccess }) {
           </div>
 
           <button
-            onClick={handleSubmit}
+            onClick={(e) => handleSubmit(e)}
             disabled={loading}
-            className="bw-btn-primary w-full justify-center py-3 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="bw-btn-primary w-full justify-center py-3 disabled:opacity-40 disabled:cursor-not-allowed mb-3"
           >
             {loading ? (
               'Verificando...'
@@ -137,6 +140,18 @@ export default function Login({ onLoginSuccess }) {
                 Iniciar Sesión
               </>
             )}
+          </button>
+
+          <button
+            onClick={(e) => {
+              setUsername('demo');
+              setPassword('demo');
+              handleSubmit(e, 'demo', 'demo');
+            }}
+            disabled={loading}
+            className="bw-btn-ghost w-full justify-center py-3 disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+          >
+            Entrar como Demo
           </button>
         </div>
 
