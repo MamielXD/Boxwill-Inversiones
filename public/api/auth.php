@@ -54,7 +54,7 @@ if ($method === 'POST') {
     $password = $data['password'];
 
     global $pdo;
-    $stmt = $pdo->prepare("SELECT id, username, password, preferencias FROM usuarios WHERE username = ?");
+    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -62,7 +62,7 @@ if ($method === 'POST') {
         $_SESSION['authenticated'] = true;
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user'] = $user['username'];
-        $prefs = $user['preferencias'] ? json_decode($user['preferencias'], true) : null;
+        $prefs = isset($user['preferencias']) && $user['preferencias'] ? json_decode($user['preferencias'], true) : null;
         echo json_encode(['success' => true, 'message' => 'Autenticado', 'user' => $user['username'], 'preferencias' => $prefs, 'user_id' => $user['id']]);
     } else {
         http_response_code(401);
@@ -72,11 +72,14 @@ if ($method === 'POST') {
 } elseif ($method === 'GET') {
     // Verificar sesión
     if (isset($_SESSION['authenticated']) && $_SESSION['authenticated'] === true) {
-        global $pdo;
-        $stmt = $pdo->prepare("SELECT preferencias FROM usuarios WHERE id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        $prefs = ($user && $user['preferencias']) ? json_decode($user['preferencias'], true) : null;
+        $prefs = null;
+        try {
+            global $pdo;
+            $stmt = $pdo->prepare("SELECT preferencias FROM usuarios WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            $prefs = ($user && isset($user['preferencias']) && $user['preferencias']) ? json_decode($user['preferencias'], true) : null;
+        } catch (\PDOException $e) {}
         echo json_encode(['authenticated' => true, 'user' => $_SESSION['user'], 'user_id' => $_SESSION['user_id'], 'preferencias' => $prefs]);
     } else {
         http_response_code(401);
@@ -104,7 +107,7 @@ function ensureTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
-    try { $pdo->exec("ALTER TABLE usuarios ADD COLUMN preferencias TEXT DEFAULT NULL"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE usuarios ADD COLUMN preferencias TEXT DEFAULT NULL"); } catch (\PDOException $e) {} catch (\Exception $e) {}
 
     // 2. Crear usuario demo si no existe
     $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE username = 'demo'");

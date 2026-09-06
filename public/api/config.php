@@ -8,6 +8,7 @@ $allowed_origins = [
     'http://25.42.9.31:4321', 
     'http://192.168.101.71:4321',
     'http://inversiones.boxwill.com',
+    'https://inversiones.boxwill.com',
     'https://core.boxwill.com'
 ];
 
