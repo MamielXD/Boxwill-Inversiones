@@ -24,6 +24,8 @@ jobs:
 
       - name: Build
         run: npx astro build
+        env:
+          PUBLIC_API_URL: ${{ secrets.PUBLIC_API_URL }}
 
       - name: Subir por FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
