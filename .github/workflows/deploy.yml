@@ -27,6 +27,17 @@ jobs:
         env:
           PUBLIC_API_URL: ${{ secrets.PUBLIC_API_URL }}
 
+      - name: Crear configuración PHP de producción
+        run: |
+          printf 'DB_HOST=%s\nDB_NAME=%s\nDB_USER=%s\nDB_PASS=%s\nTOKEN_SISTEMA=%s\n' \
+            "$DB_HOST" "$DB_NAME" "$DB_USER" "$DB_PASS" "$TOKEN_SISTEMA" > dist/.env
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          TOKEN_SISTEMA: ${{ secrets.TOKEN_SISTEMA }}
+
       - name: Subir por FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
