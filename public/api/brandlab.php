@@ -1,4 +1,20 @@
 <?php
+// Answer cross-origin preflight before loading configuration, sessions or the
+// database. This keeps the BrandLab bridge usable from Boxwill Core.
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin === 'https://core.boxwill.com') {
+    header('Access-Control-Allow-Origin: https://core.boxwill.com');
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-System-Secret');
+    header('Vary: Origin');
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit();
+}
+
 require_once 'config.php';
 
 session_start();

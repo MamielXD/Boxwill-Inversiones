@@ -7,6 +7,17 @@
 Header set X-Content-Type-Options "nosniff"
 Header set X-XSS-Protection "1; mode=block"
 
+# Return CORS headers even when an API request is answered by Apache before
+# PHP. The PHP endpoint validates the same production origin.
+<IfModule mod_headers.c>
+    SetEnvIf Origin "^https://core\\.boxwill\\.com$" CORE_ORIGIN=$0
+    Header always set Access-Control-Allow-Origin "%{CORE_ORIGIN}e" env=CORE_ORIGIN
+    Header always set Access-Control-Allow-Credentials "true" env=CORE_ORIGIN
+    Header always set Access-Control-Allow-Methods "GET, POST, DELETE, OPTIONS" env=CORE_ORIGIN
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, X-System-Secret" env=CORE_ORIGIN
+    Header always merge Vary "Origin"
+</IfModule>
+
 # Ensure Authorization header reaches PHP (some hosts/Proxies strip it)
 # This rule passes the Authorization header into the PHP env so getallheaders()/$_SERVER can see it.
 RewriteEngine On
