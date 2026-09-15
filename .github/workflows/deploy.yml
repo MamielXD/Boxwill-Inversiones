@@ -27,6 +27,9 @@ jobs:
         env:
           PUBLIC_API_URL: ${{ secrets.PUBLIC_API_URL }}
 
+      - name: Incluir configuración Apache
+        run: cp public/.htaccess dist/.htaccess
+
       - name: Crear configuración PHP de producción
         run: |
           printf 'DB_HOST=%s\nDB_NAME=%s\nDB_USER=%s\nDB_PASS=%s\nTOKEN_SISTEMA=%s\n' \
