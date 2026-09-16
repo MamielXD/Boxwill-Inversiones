@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { getLocalDateInput } from '../../utils/localDate';
 import { Boxes, Plus, RefreshCw, Trash2, Wrench, Package, X, History } from 'lucide-react';
 import Accordion from './Accordion';
 
 const API_URL = import.meta.env.PUBLIC_API_URL + '/herramientas.php';
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => getLocalDateInput();
 const fmt = n => Number(n || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 // Mismo umbral que usa el backend para "por agotarse" (<20%): rojo. Entre 20-50%: amarillo. Resto: verde.
 const stockColor = pct => pct === null ? 'var(--color-bw-muted)' : pct < 20 ? '#ef4444' : pct < 50 ? '#eab308' : '#22c55e';

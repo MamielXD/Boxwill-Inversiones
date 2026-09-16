@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { getLocalDateInput } from '../../utils/localDate';
 import { HandCoins, ChevronDown, ChevronUp, PlusCircle, Trash2, X, Check, Landmark, AlertCircle, AlertTriangle, Pencil } from 'lucide-react';
 import EditPrestamoModal from './EditPrestamoModal';
 import RefinanciarModal from './RefinanciarModal';
@@ -31,14 +32,14 @@ function calcularTablaPreview(monto, tasaMensual, numCuotas, fechaInicio, comisi
   const cuota = cuotaBase + cuotaComision;
   const date = toDate(fechaInicio);
   date.setMonth(date.getMonth() + numCuotas);
-  const fechaUltimaCuota = date.toISOString().slice(0, 10);
+  const fechaUltimaCuota = getLocalDateInput(date);
   return { cuota, totalPagar: cuota * numCuotas, totalIntereses: (cuota * numCuotas) - monto, fechaUltimaCuota };
 }
 
 function NuevoPrestamoForm({ onSaved, onCancel }) {
   const [f, setF] = useState({
     prestatario: '', monto_original: '', tasa_mensual: '', comision: '',
-    num_cuotas: '', fecha_inicio: new Date().toISOString().slice(0, 10),
+    num_cuotas: '', fecha_inicio: getLocalDateInput(),
     notas: '', registrar_en_cuenta: true,
   });
   const [preview, setPreview] = useState(null);
@@ -156,7 +157,7 @@ function NuevoPrestamoForm({ onSaved, onCancel }) {
 function PrestamoCard({ prestamo, onPagoAdded, onDeleted, onEdit, onRefinanciar }) {
   const [expanded, setExpanded] = useState(false);
   const [showPagoForm, setShowPagoForm] = useState(false);
-  const [pagoForm, setPagoForm] = useState({ monto: '', fecha: new Date().toISOString().slice(0, 10), notas: '', registrar_en_cuenta: true });
+  const [pagoForm, setPagoForm] = useState({ monto: '', fecha: getLocalDateInput(), notas: '', registrar_en_cuenta: true });
   const [saving, setSaving] = useState(false);
   const [liquidacion, setLiquidacion] = useState({
     saldo_capital: prestamo.saldo_capital,
@@ -189,8 +190,8 @@ function PrestamoCard({ prestamo, onPagoAdded, onDeleted, onEdit, onRefinanciar 
 
   useEffect(() => {
     if (!showPagoForm) return;
-    const fecha = pagoForm.fecha || new Date().toISOString().slice(0, 10);
-    const hoy = new Date().toISOString().slice(0, 10);
+    const fecha = pagoForm.fecha || getLocalDateInput();
+    const hoy = getLocalDateInput();
     if (fecha === hoy) {
       setLiquidacion({ saldo_capital: prestamo.saldo_capital, interes_liquidacion: prestamo.interes_liquidacion, monto_liquidacion: prestamo.monto_liquidacion, dias_desde_inicio: prestamo.dias_desde_inicio });
       return;
@@ -228,7 +229,7 @@ function PrestamoCard({ prestamo, onPagoAdded, onDeleted, onEdit, onRefinanciar 
       });
       if (!res.ok) { const error = await res.json(); throw new Error(error.error); }
       setShowPagoForm(false);
-      setPagoForm({ monto: '', fecha: new Date().toISOString().slice(0, 10), notas: '', registrar_en_cuenta: true });
+      setPagoForm({ monto: '', fecha: getLocalDateInput(), notas: '', registrar_en_cuenta: true });
       onPagoAdded();
     } catch (error) { alert(error.message); }
     finally { setSaving(false); }
@@ -364,7 +365,7 @@ function PrestamoCard({ prestamo, onPagoAdded, onDeleted, onEdit, onRefinanciar 
             {/* Info liquidación */}
             <div className="mb-3 px-3 py-2 text-xs" style={{ border: '1px solid rgba(139,92,246,0.3)', background: 'rgba(139,92,246,0.05)' }}>
               <div className="flex items-center justify-between gap-3">
-                <span style={{ color: 'var(--color-bw-muted)' }}>Liquidar al {pagoForm.fecha || new Date().toISOString().slice(0, 10)}</span>
+                <span style={{ color: 'var(--color-bw-muted)' }}>Liquidar al {pagoForm.fecha || getLocalDateInput()}</span>
                 <span className="font-semibold text-violet-300">{fmt(montoLiquidacion)}</span>
               </div>
               <div className="flex items-center justify-between gap-3 mt-1 text-[11px]" style={{ color: 'var(--color-bw-muted)' }}>

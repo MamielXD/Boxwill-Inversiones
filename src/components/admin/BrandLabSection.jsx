@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getLocalDateInput } from '../../utils/localDate';
 import { TrendingUp, TrendingDown, PlusCircle, DollarSign, Trash2, X, Layers, BarChart2, Clock, Wallet, ArrowDownToLine, ArrowUp, ArrowDown } from 'lucide-react';
 
 const API_URL = import.meta.env.PUBLIC_API_URL + '/brandlab.php';
@@ -53,7 +54,7 @@ export default function BrandLabSection() {
         body: JSON.stringify({
           tipo: showForm,
           monto: parseFloat(formData.monto),
-          fecha: formData.fecha || new Date().toISOString().slice(0, 10),
+          fecha: formData.fecha || getLocalDateInput(),
           notas: formData.notas || null,
           registrar_en_cuenta: formData.registrar_en_cuenta
         })

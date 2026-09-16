@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { getLocalDateInput } from '../../utils/localDate';
 import { Landmark, TrendingUp, Plus, ArrowUpCircle, ArrowDownCircle, RefreshCw, Trash2, X, Settings, Check, ArrowUp, ArrowDown, Edit2, Clock, CheckCircle2 } from 'lucide-react';
 
 const S = {
@@ -40,7 +41,7 @@ export default function CuentaBancariaSection({ onTasaChange, globalMetrics }) {
   const [editMovData, setEditMovData]     = useState({ monto: '', fecha: '', notas: '', inversion_ref: '', tipo: '' });
   const [savingEdit, setSavingEdit]       = useState(false);
   const [convertingId, setConvertingId]   = useState(null);
-  const [convertFecha, setConvertFecha]   = useState(new Date().toISOString().slice(0, 10));
+  const [convertFecha, setConvertFecha]   = useState(getLocalDateInput());
   const [savingConvert, setSavingConvert] = useState(false);
   const [editingConfig, setEditingConfig] = useState(false);
   const [configForm, setConfigForm]       = useState({ nombre_banco: '', tasa_rendimiento: '', porcentaje_salario: '' });
@@ -71,7 +72,7 @@ export default function CuentaBancariaSection({ onTasaChange, globalMetrics }) {
       const res = await fetch(API_URL, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo: showForm, monto: parseFloat(formData.monto), fecha: formData.fecha || new Date().toISOString().slice(0, 10), notas: formData.notas || null, inversion_ref: formData.inversion_ref || null }),
+        body: JSON.stringify({ tipo: showForm, monto: parseFloat(formData.monto), fecha: formData.fecha || getLocalDateInput(), notas: formData.notas || null, inversion_ref: formData.inversion_ref || null }),
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
       setShowForm(null);
@@ -480,7 +481,7 @@ console.log('globalMetrics recibidos:', {
                             {t.sign}{fmt(m.monto)}
                           </span>
                           {isEsperado && (
-                            <button onClick={() => { setConvertingId(convertingId === m.id ? null : m.id); setConvertFecha(new Date().toISOString().slice(0, 10)); setEditingMovId(null); }}
+                            <button onClick={() => { setConvertingId(convertingId === m.id ? null : m.id); setConvertFecha(getLocalDateInput()); setEditingMovId(null); }}
                               className="opacity-0 group-hover:opacity-100 text-green-600 hover:text-green-400 transition-all" title="Convertir a ingreso real">
                               <CheckCircle2 size={14} />
                             </button>

@@ -1,5 +1,6 @@
 // RefinanciarModal.jsx
 import React, { useState } from 'react';
+import { getLocalDateInput } from '../../utils/localDate';
 import { HandCoins, X, AlertCircle, Check } from 'lucide-react';
 
 const S = {
@@ -15,7 +16,7 @@ const fmt = (n) => parseFloat(n || 0).toLocaleString('es-CO', { style: 'currency
 
 export default function RefinanciarModal({ prestamo, onClose, onSuccess }) {
     const [fechaRefinanciacion, setFechaRefinanciacion] = useState(
-        new Date().toISOString().slice(0, 10)
+        getLocalDateInput()
     );
     const [nuevaTasa, setNuevaTasa] = useState(prestamo?.tasa_mensual || '');
     const [nuevoPlazo, setNuevoPlazo] = useState(prestamo?.num_cuotas || '');

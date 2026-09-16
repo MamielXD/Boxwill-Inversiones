@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getLocalDateInput } from '../../utils/localDate';
 import MetricsCards from './MetricsCards';
 import DistributionChart from './DistributionChart';
 import EvolutionChart from './EvolutionChart';
@@ -163,7 +164,7 @@ export default function AdminPanel({ onLogout, userId, initPrefs }) {
   const { data: patrimonioData } = usePatrimonioData();
   const [showSold, setShowSold] = useState(false);
   const [tasaOportunidad, setTasaOportunidad] = useState(8.0);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getLocalDateInput();
 
   const emptyForm = {
     nombre: '', monto: '', categoria: 'Sin categoría', fecha: today,
@@ -300,7 +301,7 @@ export default function AdminPanel({ onLogout, userId, initPrefs }) {
       const res = await fetch(API_URL, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add_dividendo', inversion_id: id, monto: parseFloat(divForm.monto), fecha: divForm.fecha || new Date().toISOString().slice(0, 10), registrar_en_cuenta: divForm.registrar_en_cuenta })
+        body: JSON.stringify({ action: 'add_dividendo', inversion_id: id, monto: parseFloat(divForm.monto), fecha: divForm.fecha || getLocalDateInput(), registrar_en_cuenta: divForm.registrar_en_cuenta })
       });
       if (!res.ok) throw new Error('Error al registrar dividendo');
       setAddingDivId(null);

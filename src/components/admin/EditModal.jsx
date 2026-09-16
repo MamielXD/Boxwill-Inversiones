@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getLocalDateInput } from '../../utils/localDate';
 import { X, Unlock, Lock, AlertTriangle, Landmark } from 'lucide-react';
 
 const CUENTA_API = import.meta.env.PUBLIC_API_URL + '/cuenta.php';
@@ -93,7 +94,7 @@ export default function EditModal({ row, onClose, onSave }) {
           body: JSON.stringify({
             tipo: 'deposito',
             monto: netoCuenta,
-            fecha: f.fecha_venta || new Date().toISOString().slice(0, 10),
+            fecha: f.fecha_venta || getLocalDateInput(),
             inversion_ref: f.nombre || row.nombre,
             notas: `Venta neta (${precioVentaNum.toLocaleString('es-CO')} - ${costoOpVentaNum.toLocaleString('es-CO')} costos venta)`,
           }),

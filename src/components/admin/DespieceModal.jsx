@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { getLocalDateInput } from '../../utils/localDate';
 import { X, Boxes, Plus, Trash2 } from 'lucide-react';
 
 const API_URL = import.meta.env.PUBLIC_API_URL + '/inversiones.php';
-const today = new Date().toISOString().slice(0, 10);
+const today = getLocalDateInput();
 const fmt = n => Number(n || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const input = { background: 'var(--color-bw-raised)', border: '1px solid var(--color-bw-border-strong)', color: 'var(--color-bw-white)', padding: '0.45rem 0.55rem', width: '100%', borderRadius: 0, fontSize: '0.75rem' };
 
