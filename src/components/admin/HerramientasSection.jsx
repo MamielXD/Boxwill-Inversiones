@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { getLocalDateInput } from '../../utils/localDate';
 import { Boxes, Plus, RefreshCw, Trash2, Wrench, Package, X, History, DollarSign } from 'lucide-react';
 import Accordion from './Accordion';
@@ -29,6 +29,9 @@ const StockBar = ({ item }) => {
 };
 
 export default function HerramientasSection({ onSaved }) {
+  const saleRef = useRef(null);
+  const reponerRef = useRef(null);
+  const historyRef = useRef(null);
   const [items, setItems] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -52,6 +55,10 @@ export default function HerramientasSection({ onSaved }) {
     } catch (e) { console.error('Error al cargar herramientas:', e); }
   }, []);
   useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    const target = saleItem ? saleRef.current : reponerId ? reponerRef.current : historyItem ? historyRef.current : null;
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [saleItem, reponerId, historyItem]);
 
   async function request(url, method, body) {
     const res = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -102,8 +109,16 @@ export default function HerramientasSection({ onSaved }) {
   }
 
   function openSale(item) {
+    setReponerId(null);
+    setHistoryItem(null);
     setSaleItem(item);
     setSaleForm({ cantidad: item.tipo === 'herramienta' ? '1' : String(item.cantidad_restante || ''), precio_venta: '', fecha: today(), registrar_en_cuenta: true });
+  }
+
+  function openReponer(item) {
+    setSaleItem(null);
+    setHistoryItem(null);
+    setReponerId(item.id);
   }
 
   async function showHistory(item) {
@@ -111,6 +126,8 @@ export default function HerramientasSection({ onSaved }) {
     try {
       const res = await fetch(`${API_URL}?action=usos&item_id=${item.id}`, { credentials: 'include' });
       if (!res.ok) throw new Error('No se pudo cargar el historial');
+      setSaleItem(null);
+      setReponerId(null);
       setHistoryItem(item); setUsos(await res.json());
     } catch (e) { alert(e.message); }
   }
@@ -137,10 +154,10 @@ export default function HerramientasSection({ onSaved }) {
     {reponerId && (() => {
       const itemParaReposicion = items.find(i => i.id === reponerId);
       const labelReponer = itemParaReposicion?.tipo === 'repuesto' ? 'Registrar retiro en Banco' : 'Registrar gasto operativo en Banco';
-      return <form onSubmit={reponer} className="p-4 mb-4" style={{ ...S.card, borderColor: 'rgba(34,197,94,.3)' }}><p className="text-xs text-green-400 mb-3">Reposición de stock</p><div className="grid grid-cols-1 sm:grid-cols-4 gap-3"><input required type="number" min="0.0001" step="0.0001" placeholder="Cantidad agregada" value={reposicion.cantidad_agregada} onChange={e => setReposicion({ ...reposicion, cantidad_agregada: e.target.value })} style={S.input} /><input required type="number" step="0.01" min="0.01" placeholder="Costo de compra" value={reposicion.costo_compra} onChange={e => setReposicion({ ...reposicion, costo_compra: e.target.value })} style={S.input} /><input type="date" value={reposicion.fecha} onChange={e => setReposicion({ ...reposicion, fecha: e.target.value })} style={S.input} /><div className="flex gap-2"><button disabled={saving} className="px-3 text-xs text-white" style={{ background: '#059669' }}>Reponer</button><button type="button" onClick={() => setReponerId(null)} className="text-xs" style={{ color: 'var(--color-bw-muted)' }}>Cancelar</button></div></div><label className="text-xs flex gap-2 mt-3" style={{ color: 'var(--color-bw-muted)' }}><input type="checkbox" checked={reposicion.registrar_en_cuenta} onChange={e => setReposicion({ ...reposicion, registrar_en_cuenta: e.target.checked })} /> {labelReponer}</label></form>;
+      return <form ref={reponerRef} onSubmit={reponer} className="p-4 mb-4" style={{ ...S.card, borderColor: 'rgba(34,197,94,.3)' }}><p className="text-xs text-green-400 mb-3">Reposición de stock</p><div className="grid grid-cols-1 sm:grid-cols-4 gap-3"><input required type="number" min="0.0001" step="0.0001" placeholder="Cantidad agregada" value={reposicion.cantidad_agregada} onChange={e => setReposicion({ ...reposicion, cantidad_agregada: e.target.value })} style={S.input} /><input required type="number" step="0.01" min="0.01" placeholder="Costo de compra" value={reposicion.costo_compra} onChange={e => setReposicion({ ...reposicion, costo_compra: e.target.value })} style={S.input} /><input type="date" value={reposicion.fecha} onChange={e => setReposicion({ ...reposicion, fecha: e.target.value })} style={S.input} /><div className="flex gap-2"><button disabled={saving} className="px-3 text-xs text-white" style={{ background: '#059669' }}>Reponer</button><button type="button" onClick={() => setReponerId(null)} className="text-xs" style={{ color: 'var(--color-bw-muted)' }}>Cancelar</button></div></div><label className="text-xs flex gap-2 mt-3" style={{ color: 'var(--color-bw-muted)' }}><input type="checkbox" checked={reposicion.registrar_en_cuenta} onChange={e => setReposicion({ ...reposicion, registrar_en_cuenta: e.target.checked })} /> {labelReponer}</label></form>;
     })()}
 
-    {saleItem && <form onSubmit={sell} className="p-4 mb-4" style={{ ...S.card, borderColor: 'rgba(34,197,94,.3)' }}>
+    {saleItem && <form ref={saleRef} onSubmit={sell} className="p-4 mb-4" style={{ ...S.card, borderColor: 'rgba(34,197,94,.3)' }}>
       <div className="flex justify-between mb-3"><span className="text-sm text-green-400">Registrar venta: {saleItem.nombre}</span><button type="button" onClick={() => setSaleItem(null)} style={{ color: 'var(--color-bw-muted)' }}><X size={15} /></button></div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {saleItem.tipo !== 'herramienta' && <div><label style={S.label}>Cantidad vendida ({saleItem.unidad_medida})</label><input required type="number" min="0.0001" max={saleItem.cantidad_restante} step="0.0001" value={saleForm.cantidad} onChange={e => setSaleForm({ ...saleForm, cantidad: e.target.value })} style={S.input} /></div>}
@@ -172,7 +189,7 @@ export default function HerramientasSection({ onSaved }) {
                       <td className="p-3">{item.tipo === 'herramienta' ? <span className="flex gap-1" style={{ color: 'var(--color-bw-secondary)' }}><Wrench size={12} /> Herramienta</span> : <span className="flex gap-1" style={{ color: 'var(--color-bw-secondary)' }}><Package size={12} /> {item.tipo === 'repuesto' ? 'Repuesto' : 'Consumible'}</span>}</td>
                       <td className="p-3 text-right"><StockBar item={item} /></td>
                       <td className="p-3 text-right">{fmt(item.costo_compra)}</td>
-                      <td className="p-3"><div className="flex justify-center gap-3"><button onClick={() => openSale(item)} title="Vender" className="text-green-400"><DollarSign size={13} /></button><button onClick={() => showHistory(item)} title="Historial de usos" className="text-cyan-400"><History size={13} /></button>{item.tipo !== 'herramienta' && <button onClick={() => setReponerId(item.id)} title="Reponer" className="text-green-400"><RefreshCw size={13} /></button>}<button onClick={() => remove(item)} title="Eliminar" className="text-red-400"><Trash2 size={13} /></button></div></td>
+                      <td className="p-3"><div className="flex justify-center gap-3"><button onClick={() => openSale(item)} title="Vender" className="text-green-400"><DollarSign size={13} /></button><button onClick={() => showHistory(item)} title="Historial de usos" className="text-cyan-400"><History size={13} /></button>{item.tipo !== 'herramienta' && <button onClick={() => openReponer(item)} title="Reponer" className="text-green-400"><RefreshCw size={13} /></button>}<button onClick={() => remove(item)} title="Eliminar" className="text-red-400"><Trash2 size={13} /></button></div></td>
                     </tr>
                   ))}
                   {activos.length === 0 && <tr><td colSpan="5" className="text-center p-6" style={{ color: 'var(--color-bw-muted)' }}>Aún no hay herramientas, consumibles o repuestos registrados.</td></tr>}
@@ -211,7 +228,7 @@ export default function HerramientasSection({ onSaved }) {
                           <td className="p-3">
                             <div className="flex justify-center gap-3">
                               <button onClick={() => showHistory(item)} title="Historial de usos" className="text-cyan-400"><History size={13} /></button>
-                              {item.tipo !== 'herramienta' && <button onClick={() => setReponerId(item.id)} title="Reponer" className="text-green-400"><RefreshCw size={13} /></button>}
+                              {item.tipo !== 'herramienta' && <button onClick={() => openReponer(item)} title="Reponer" className="text-green-400"><RefreshCw size={13} /></button>}
                               <button onClick={() => remove(item)} title="Eliminar" className="text-red-400"><Trash2 size={13} /></button>
                             </div>
                           </td>
@@ -226,6 +243,6 @@ export default function HerramientasSection({ onSaved }) {
         );
       })()
     }
-    {historyItem && <div className="mt-3 p-4" style={S.card}><p className="text-xs font-medium mb-2" style={{ color: 'var(--color-bw-secondary)' }}>Historial de uso: {historyItem.nombre}</p>{usos.length ? <div className="space-y-1">{usos.map(uso => <div key={uso.id} className="flex justify-between text-xs p-2" style={{ background: 'var(--color-bw-raised)' }}><span>{uso.fecha} · {uso.inversion_nombre || 'Sin inversión'}</span><span style={{ color: 'var(--color-bw-white)' }}>{uso.cantidad_usada ? `${uso.cantidad_usada} ${historyItem.unidad_medida} · ` : ''}{fmt(uso.costo_calculado)}</span></div>)}</div> : <p className="text-xs" style={{ color: 'var(--color-bw-muted)' }}>Aún no tiene usos registrados.</p>}</div>}
+    {historyItem && <div ref={historyRef} className="mt-3 p-4" style={S.card}><p className="text-xs font-medium mb-2" style={{ color: 'var(--color-bw-secondary)' }}>Historial de uso: {historyItem.nombre}</p>{usos.length ? <div className="space-y-1">{usos.map(uso => <div key={uso.id} className="flex justify-between text-xs p-2" style={{ background: 'var(--color-bw-raised)' }}><span>{uso.fecha} · {uso.inversion_nombre || 'Sin inversión'}</span><span style={{ color: 'var(--color-bw-white)' }}>{uso.cantidad_usada ? `${uso.cantidad_usada} ${historyItem.unidad_medida} · ` : ''}{fmt(uso.costo_calculado)}</span></div>)}</div> : <p className="text-xs" style={{ color: 'var(--color-bw-muted)' }}>Aún no tiene usos registrados.</p>}</div>}
   </div>;
 }
