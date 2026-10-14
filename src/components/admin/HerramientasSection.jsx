@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getLocalDateInput } from '../../utils/localDate';
-import { Boxes, Plus, RefreshCw, Trash2, Wrench, Package, X, History } from 'lucide-react';
+import { Boxes, Plus, RefreshCw, Trash2, Wrench, Package, X, History, DollarSign } from 'lucide-react';
 import Accordion from './Accordion';
 
 const API_URL = import.meta.env.PUBLIC_API_URL + '/herramientas.php';
@@ -28,11 +28,13 @@ const StockBar = ({ item }) => {
   );
 };
 
-export default function HerramientasSection() {
+export default function HerramientasSection({ onSaved }) {
   const [items, setItems] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [reponerId, setReponerId] = useState(null);
+  const [saleItem, setSaleItem] = useState(null);
+  const [saleForm, setSaleForm] = useState({ cantidad: '', precio_venta: '', fecha: today(), registrar_en_cuenta: true });
   const [historyItem, setHistoryItem] = useState(null);
   const [usos, setUsos] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -84,6 +86,26 @@ export default function HerramientasSection() {
     try { await request(API_URL, 'DELETE', { id: item.id }); fetchAll(); } catch (e) { alert(e.message); }
   }
 
+  async function sell(e) {
+    e.preventDefault(); setSaving(true);
+    try {
+      await request(`${API_URL}?action=vender`, 'POST', {
+        id: saleItem.id,
+        ...saleForm,
+        cantidad: saleItem.tipo === 'herramienta' ? 1 : Number(saleForm.cantidad),
+        precio_venta: Number(saleForm.precio_venta),
+      });
+      setSaleItem(null);
+      await fetchAll();
+      await onSaved?.();
+    } catch (e) { alert(e.message); } finally { setSaving(false); }
+  }
+
+  function openSale(item) {
+    setSaleItem(item);
+    setSaleForm({ cantidad: item.tipo === 'herramienta' ? '1' : String(item.cantidad_restante || ''), precio_venta: '', fecha: today(), registrar_en_cuenta: true });
+  }
+
   async function showHistory(item) {
     if (historyItem?.id === item.id) { setHistoryItem(null); setUsos([]); return; }
     try {
@@ -118,6 +140,16 @@ export default function HerramientasSection() {
       return <form onSubmit={reponer} className="p-4 mb-4" style={{ ...S.card, borderColor: 'rgba(34,197,94,.3)' }}><p className="text-xs text-green-400 mb-3">Reposición de stock</p><div className="grid grid-cols-1 sm:grid-cols-4 gap-3"><input required type="number" min="0.0001" step="0.0001" placeholder="Cantidad agregada" value={reposicion.cantidad_agregada} onChange={e => setReposicion({ ...reposicion, cantidad_agregada: e.target.value })} style={S.input} /><input required type="number" step="0.01" min="0.01" placeholder="Costo de compra" value={reposicion.costo_compra} onChange={e => setReposicion({ ...reposicion, costo_compra: e.target.value })} style={S.input} /><input type="date" value={reposicion.fecha} onChange={e => setReposicion({ ...reposicion, fecha: e.target.value })} style={S.input} /><div className="flex gap-2"><button disabled={saving} className="px-3 text-xs text-white" style={{ background: '#059669' }}>Reponer</button><button type="button" onClick={() => setReponerId(null)} className="text-xs" style={{ color: 'var(--color-bw-muted)' }}>Cancelar</button></div></div><label className="text-xs flex gap-2 mt-3" style={{ color: 'var(--color-bw-muted)' }}><input type="checkbox" checked={reposicion.registrar_en_cuenta} onChange={e => setReposicion({ ...reposicion, registrar_en_cuenta: e.target.checked })} /> {labelReponer}</label></form>;
     })()}
 
+    {saleItem && <form onSubmit={sell} className="p-4 mb-4" style={{ ...S.card, borderColor: 'rgba(34,197,94,.3)' }}>
+      <div className="flex justify-between mb-3"><span className="text-sm text-green-400">Registrar venta: {saleItem.nombre}</span><button type="button" onClick={() => setSaleItem(null)} style={{ color: 'var(--color-bw-muted)' }}><X size={15} /></button></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {saleItem.tipo !== 'herramienta' && <div><label style={S.label}>Cantidad vendida ({saleItem.unidad_medida})</label><input required type="number" min="0.0001" max={saleItem.cantidad_restante} step="0.0001" value={saleForm.cantidad} onChange={e => setSaleForm({ ...saleForm, cantidad: e.target.value })} style={S.input} /></div>}
+        <div><label style={S.label}>Valor de venta</label><input required type="number" min="0" step="0.01" value={saleForm.precio_venta} onChange={e => setSaleForm({ ...saleForm, precio_venta: e.target.value })} style={S.input} /></div>
+        <div><label style={S.label}>Fecha de venta</label><input required type="date" value={saleForm.fecha} onChange={e => setSaleForm({ ...saleForm, fecha: e.target.value })} style={S.input} /></div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 mt-3"><label className="text-xs flex gap-2" style={{ color: 'var(--color-bw-muted)' }}><input type="checkbox" checked={saleForm.registrar_en_cuenta} onChange={e => setSaleForm({ ...saleForm, registrar_en_cuenta: e.target.checked })} /> Registrar ingreso en Banco</label><button disabled={saving} className="px-4 py-2 text-xs bw-btn-primary disabled:opacity-50">{saving ? 'Guardando...' : 'Confirmar venta'}</button></div>
+    </form>}
+
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
       {[['Herramientas activas', metrics?.herramientas_activas || 0], ['Valor en herramientas', fmt(metrics?.total_invertido_herramientas)], ['Valor en repuestos', fmt(metrics?.valor_repuestos)], ['Valor en consumibles', fmt(metrics?.valor_restante_consumibles)], ['Costo distribuido del mes', fmt(metrics?.costo_operativo_distribuido_mes)]].map(([label, value]) => <div key={label} className="p-3" style={S.card}><p className="text-[10px]" style={{ color: 'var(--color-bw-muted)' }}>{label}</p><p className="text-lg font-bold" style={{ color: 'var(--color-bw-white)' }}>{value}</p></div>)}
     </div>
@@ -140,7 +172,7 @@ export default function HerramientasSection() {
                       <td className="p-3">{item.tipo === 'herramienta' ? <span className="flex gap-1" style={{ color: 'var(--color-bw-secondary)' }}><Wrench size={12} /> Herramienta</span> : <span className="flex gap-1" style={{ color: 'var(--color-bw-secondary)' }}><Package size={12} /> {item.tipo === 'repuesto' ? 'Repuesto' : 'Consumible'}</span>}</td>
                       <td className="p-3 text-right"><StockBar item={item} /></td>
                       <td className="p-3 text-right">{fmt(item.costo_compra)}</td>
-                      <td className="p-3"><div className="flex justify-center gap-3"><button onClick={() => showHistory(item)} title="Historial de usos" className="text-cyan-400"><History size={13} /></button>{item.tipo !== 'herramienta' && <button onClick={() => setReponerId(item.id)} title="Reponer" className="text-green-400"><RefreshCw size={13} /></button>}<button onClick={() => remove(item)} title="Eliminar" className="text-red-400"><Trash2 size={13} /></button></div></td>
+                      <td className="p-3"><div className="flex justify-center gap-3"><button onClick={() => openSale(item)} title="Vender" className="text-green-400"><DollarSign size={13} /></button><button onClick={() => showHistory(item)} title="Historial de usos" className="text-cyan-400"><History size={13} /></button>{item.tipo !== 'herramienta' && <button onClick={() => setReponerId(item.id)} title="Reponer" className="text-green-400"><RefreshCw size={13} /></button>}<button onClick={() => remove(item)} title="Eliminar" className="text-red-400"><Trash2 size={13} /></button></div></td>
                     </tr>
                   ))}
                   {activos.length === 0 && <tr><td colSpan="5" className="text-center p-6" style={{ color: 'var(--color-bw-muted)' }}>Aún no hay herramientas, consumibles o repuestos registrados.</td></tr>}

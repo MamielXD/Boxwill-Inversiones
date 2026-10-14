@@ -24,6 +24,7 @@ switch ($method) {
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
         if ($action === 'reponer') reponerItem($data);
+        elseif ($action === 'vender') venderItem($data);
         else agregarItem($data);
         break;
     case 'PUT':
@@ -50,9 +51,23 @@ function ensureTables() {
         monto DECIMAL(12,2) NOT NULL,
         categoria VARCHAR(100) DEFAULT 'Sin categoría',
         fecha DATE,
+        valor_actual DECIMAL(12,2) DEFAULT NULL,
+        costo_operativo DECIMAL(12,2) DEFAULT 0,
+        costo_operativo_venta DECIMAL(12,2) DEFAULT 0,
+        precio_venta DECIMAL(12,2) DEFAULT NULL,
+        fecha_venta DATE DEFAULT NULL,
         estado ENUM('activo', 'vendido') DEFAULT 'activo',
+        valor_transferido DECIMAL(12,2) NOT NULL DEFAULT 0,
+        notas TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
+    try { $pdo->exec("ALTER TABLE inversiones ADD COLUMN valor_actual DECIMAL(12,2) DEFAULT NULL AFTER fecha"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE inversiones ADD COLUMN costo_operativo DECIMAL(12,2) DEFAULT 0 AFTER valor_actual"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE inversiones ADD COLUMN costo_operativo_venta DECIMAL(12,2) DEFAULT 0 AFTER costo_operativo"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE inversiones ADD COLUMN precio_venta DECIMAL(12,2) DEFAULT NULL AFTER costo_operativo_venta"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE inversiones ADD COLUMN fecha_venta DATE DEFAULT NULL AFTER precio_venta"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE inversiones ADD COLUMN valor_transferido DECIMAL(12,2) NOT NULL DEFAULT 0 AFTER precio_venta"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE inversiones ADD COLUMN notas TEXT NULL AFTER estado"); } catch (Exception $e) {}
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS inversion_gastos (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -87,12 +102,13 @@ function ensureTables() {
         cantidad_total DECIMAL(12,4) NULL,
         cantidad_restante DECIMAL(12,4) NULL,
         costo_unitario DECIMAL(14,6) NULL,
-        estado ENUM('activo', 'agotado', 'dañado', 'perdido') NOT NULL DEFAULT 'activo',
+        estado ENUM('activo', 'agotado', 'dañado', 'perdido', 'vendido') NOT NULL DEFAULT 'activo',
         notas TEXT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
     try { $pdo->exec("ALTER TABLE inventario_items MODIFY COLUMN tipo ENUM('consumible', 'herramienta', 'repuesto') NOT NULL"); } catch (Exception $e) {}
     try { $pdo->exec("ALTER TABLE inventario_items ADD COLUMN origen_inversion_id INT NULL AFTER user_id"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE inventario_items MODIFY COLUMN estado ENUM('activo', 'agotado', 'dañado', 'perdido', 'vendido') NOT NULL DEFAULT 'activo'"); } catch (Exception $e) {}
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS inventario_usos (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -157,7 +173,7 @@ function obtenerMetricasHerramientas() {
     global $pdo;
     $userId = $_SESSION['user_id'];
     try {
-        $stmt = $pdo->prepare("SELECT SUM(costo_compra) FROM inventario_items WHERE tipo = 'herramienta' AND user_id = ? AND estado != 'perdido'");
+        $stmt = $pdo->prepare("SELECT SUM(costo_compra) FROM inventario_items WHERE tipo = 'herramienta' AND user_id = ? AND estado NOT IN ('perdido', 'vendido')");
         $stmt->execute([$userId]);
         $totalHerramientas = floatval($stmt->fetchColumn() ?? 0);
 
@@ -335,6 +351,62 @@ function reponerItem($data) {
         echo json_encode($stmt->fetch(PDO::FETCH_ASSOC));
     } catch (PDOException $e) {
         $pdo->rollBack();
+        http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
+    }
+}
+
+function venderItem($data) {
+    global $pdo;
+    $userId = $_SESSION['user_id'];
+    $id = intval($data['id'] ?? 0);
+    $precioVenta = $data['precio_venta'] ?? null;
+    if (!$id || !is_numeric($precioVenta) || floatval($precioVenta) < 0) {
+        http_response_code(400); echo json_encode(['error' => 'Indica un valor de venta válido']); return;
+    }
+    $fecha = !empty($data['fecha']) ? $data['fecha'] : date('Y-m-d');
+
+    try {
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare("SELECT * FROM inventario_items WHERE id = ? AND user_id = ? AND estado = 'activo' FOR UPDATE");
+        $stmt->execute([$id, $userId]);
+        $item = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$item) { $pdo->rollBack(); http_response_code(404); echo json_encode(['error' => 'Item activo no encontrado']); return; }
+
+        $esHerramienta = $item['tipo'] === 'herramienta';
+        $cantidadDisponible = $esHerramienta ? 1 : floatval($item['cantidad_restante']);
+        $cantidad = $esHerramienta ? 1 : floatval($data['cantidad'] ?? 0);
+        if ($cantidad <= 0 || $cantidad > $cantidadDisponible) {
+            $pdo->rollBack(); http_response_code(400); echo json_encode(['error' => 'La cantidad debe ser mayor a cero y no superar lo disponible']); return;
+        }
+
+        $costoUnitario = $esHerramienta ? floatval($item['costo_compra']) : floatval($item['costo_unitario']);
+        $costoAsignado = round($costoUnitario * $cantidad, 2);
+        $cantidadRestante = $esHerramienta ? 0 : max(0, round($cantidadDisponible - $cantidad, 4));
+        $estado = $cantidadRestante <= 0 ? 'vendido' : 'activo';
+        $nombreVenta = 'Venta inventario: ' . $item['nombre'];
+
+        $insert = $pdo->prepare("INSERT INTO inversiones (user_id, nombre, monto, categoria, fecha, valor_actual, costo_operativo, costo_operativo_venta, precio_venta, fecha_venta, estado, notas) VALUES (?, ?, ?, 'Inventario', ?, NULL, 0, 0, ?, ?, 'vendido', ?)");
+        $detalle = 'Venta de ' . $cantidad . ($esHerramienta ? ' unidad' : ' ' . $item['unidad_medida']) . ' desde inventario';
+        $insert->execute([$userId, $nombreVenta, $costoAsignado, $fecha, floatval($precioVenta), $fecha, $detalle]);
+        $inversionId = $pdo->lastInsertId();
+
+        if ($esHerramienta) {
+            $update = $pdo->prepare("UPDATE inventario_items SET estado = 'vendido' WHERE id = ? AND user_id = ?");
+            $update->execute([$id, $userId]);
+        } else {
+            $update = $pdo->prepare("UPDATE inventario_items SET cantidad_restante = ?, estado = ? WHERE id = ? AND user_id = ?");
+            $update->execute([$cantidadRestante, $estado, $id, $userId]);
+        }
+
+        if (!empty($data['registrar_en_cuenta'])) {
+            $movimiento = $pdo->prepare("INSERT INTO cuenta_movimientos (user_id, tipo, monto, fecha, inversion_ref, notas) VALUES (?, 'deposito', ?, ?, ?, ?)");
+            $movimiento->execute([$userId, floatval($precioVenta), $fecha, $nombreVenta, 'Venta de inventario']);
+        }
+
+        $pdo->commit();
+        echo json_encode(['success' => true, 'inversion_id' => $inversionId, 'costo_asignado' => $costoAsignado]);
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
         http_response_code(500); echo json_encode(['error' => $e->getMessage()]);
     }
 }

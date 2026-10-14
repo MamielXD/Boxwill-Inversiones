@@ -20,7 +20,7 @@ const HERRAMIENTAS_API = import.meta.env.PUBLIC_API_URL + '/herramientas.php';
 
 export const CATEGORIAS = [
   'Tecnología', 'Electrónica', 'Ropa y Accesorios', 'Equity / Empresas',
-  'Acciones en Bolsa', 'Bienes Raíces', 'Vehículos', 'Servicios', 'Otro', 'Sin categoría',
+  'Acciones en Bolsa', 'Bienes Raíces', 'Vehículos', 'Servicios', 'Inventario', 'Otro', 'Sin categoría',
 ];
 
 // Estilos reutilizables del panel
@@ -397,7 +397,7 @@ export default function AdminPanel({ onLogout, userId, initPrefs }) {
                 return renderSection('cuenta', 'Cuenta Bancaria',
                   <CuentaBancariaSection onTasaChange={setTasaOportunidad} globalMetrics={metrics} />);
               case 'herramientas':
-                return renderSection('herramientas', 'Herramientas e Inventario', <HerramientasSection />);
+                return renderSection('herramientas', 'Herramientas e Inventario', <HerramientasSection onSaved={async () => { await fetchInversiones(); await fetchMetrics(); }} />);
               case 'prestamos':
                 return renderSection('prestamos', 'Préstamos', <PrestamosSection />);
               case 'ingresar':

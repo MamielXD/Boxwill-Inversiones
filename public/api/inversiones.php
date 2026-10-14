@@ -147,11 +147,12 @@ function ensureTables() {
         cantidad_total DECIMAL(12,4) NULL,
         cantidad_restante DECIMAL(12,4) NULL,
         costo_unitario DECIMAL(14,6) NULL,
-        estado ENUM('activo', 'agotado', 'dañado', 'perdido') NOT NULL DEFAULT 'activo',
+        estado ENUM('activo', 'agotado', 'dañado', 'perdido', 'vendido') NOT NULL DEFAULT 'activo',
         notas TEXT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
     try { $pdo->exec("ALTER TABLE inventario_items MODIFY COLUMN tipo ENUM('consumible', 'herramienta', 'repuesto') NOT NULL"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE inventario_items MODIFY COLUMN estado ENUM('activo', 'agotado', 'dañado', 'perdido', 'vendido') NOT NULL DEFAULT 'activo'"); } catch (Exception $e) {}
     try { $pdo->exec("ALTER TABLE inventario_items ADD COLUMN origen_inversion_id INT NULL AFTER user_id"); } catch (Exception $e) {}
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS inventario_usos (
